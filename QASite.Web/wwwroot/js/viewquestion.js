@@ -1,0 +1,6 @@
+﻿$(() => {
+    viewQuestions();
+    function viewQuestions() {
+
+    }
+})

@@ -1,0 +1,61 @@
+﻿@model ViewQuestionViewModel
+@using StackOverflow.Data
+
+<div class="row" style="margin-top:100px;">
+    <div class="col-md-8 offset-md-2 bg-light p-4 shadow rounded">
+        <h2>@Model.Question.Title</h2>
+        <hr />
+        <p>@Model.Question.Text</p>
+        <hr />
+        <span>Asked by @Model.UserName </span>
+        <span>on </span>
+        <span>@Model.Question.DatePosted</span>
+        <br />
+        <span>Tags: </span>
+        @foreach (var tag in Model.Tags)
+        {
+            <span class="badge bg-primary">@tag.Description </span>
+        }
+        <br />
+        <span>Likes: </span>
+        <span>@Model.Likes</span>
+    </div>
+    <div class="col-md-8 offset-md-2">
+        <h3>Answers:</h3>
+    </div>
+    @if (Model.AnswerUsers == null)
+    {
+        <div class="col-md-8 offset-md-2 card card-body bg-light">
+            <h3>No answers yet. Be the first one to submit one!</h3>
+        </div>
+    }
+    else
+    {
+        @foreach (var answer in Model.Answers)
+        {
+            <div class="col-md-8 offset-md-2 card card-body bg-light">
+
+                <span>@answer.Text </span>
+
+                <br />
+                <span>Answered by @answer.AnswerUsers.Where(au=>au.AnswerId==answer.Id).User.Name on @answer.DatePosted </span>
+                <hr />
+            </div>
+        }
+    }
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="row">
+            <div class="col-md-8 offset-md-2 card card-body bg-light mt-4">
+                <h2>Submit an Answer</h2>
+                <form method="post" action="/home/submitanswer">
+                    <input type="hidden" name="questionId" value="@Model.Question.Id" />
+                    <textarea placeholder="Type your text here..." name="text" class="form-control" rows="10"></textarea>
+                    <br />
+                    <button class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    }
+
+</div>

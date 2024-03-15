@@ -1,0 +1,18 @@
+﻿<div class="row" style="display:flex; min-height:80vh; align-items:center;">
+    <div class="col-md-8 offset-md-2 bg-light p-4 shadow">
+        <h2>Log In</h2>
+        <br />
+        @if(ViewBag.Message !=null)
+        {
+            <h5>@ViewBag.Message</h5>
+        }
+        <form method="post" action="/account/login">
+            <input type="text" class="form-control" name="email" placeholder="Email" />
+            <br />
+            <input type="password" class="form-control" name="password" placeholder="Password" />
+            <br />
+            <button class="btn btn-primary">Log In</button>
+        </form>
+        <a href="/account/signup">Don't have an account? Sign up here!</a>
+    </div>
+</div>

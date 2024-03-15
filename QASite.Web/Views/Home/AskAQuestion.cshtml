@@ -1,0 +1,23 @@
+﻿
+<div class="row" style="display:flex; align-items:center; min-height:80vh;">
+    <div class="col-md-8 offset-md-2 bg-light p-4 shadow">
+        <form method="post" action="/home/submitquestion">
+            <h3>Ask A Question</h3>
+            <br />
+            <input class="form-control" placeholder="Title" name="title" />
+            <br />
+            <textarea placeholder="Type your question here..." name="text" rows="10" class="form-control"></textarea>
+            <br />
+            @*            <div class="bootstrap-tagsinput">
+            <input type="text" placeholder="" data-role="tagsinput" />
+            </div>*@
+            <select multiple name="tags" id="tags" class="form-control" style="display:none;"></select>
+            <br />
+            <button class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</div>
+
+@section scripts{
+    <script src="~/js/question.js"></script>
+}
