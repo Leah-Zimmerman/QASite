@@ -2,12 +2,23 @@ namespace QASite.Web
 {
     public class Program
     {
+        private static string CookieScheme = "QASite";
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Services.AddAuthentication(CookieScheme)
+       .AddCookie(CookieScheme, options =>
+       {
+           options.LoginPath = "/account/login";
+       });
+            builder.Services.AddSession();
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+            });
 
             var app = builder.Build();
 
@@ -23,7 +34,8 @@ namespace QASite.Web
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseSession();
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllerRoute(

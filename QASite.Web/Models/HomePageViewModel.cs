@@ -8,5 +8,8 @@ namespace QASite.Web.Models
         public int Likes { get; set; }
         public List<Answer>? Answers { get; set; }
         public int AnswerCount { get; set; }
+        public List<QuestionTag> QuestionTags { get; set; }
+        public Question Question { get; set; }
+        
     }
 }

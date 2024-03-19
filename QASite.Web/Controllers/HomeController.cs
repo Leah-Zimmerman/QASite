@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QASite.Data;
+using QASite.Web.Models;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace StackOverflow.Web.Controllers
 {
@@ -21,25 +24,19 @@ namespace StackOverflow.Web.Controllers
         public IActionResult GetQuestions()
         {
             var repo = new QuestionRepository(_connectionString);
+            var q = repo.GetQuestions();
             return Json(repo.GetQuestions());
         }
-        public IActionResult GetTagsForQuestion(Question question)
+        public IActionResult GetQuestionTags()
         {
             var repo = new QuestionRepository(_connectionString);
-            return Json(repo.GetTagsForQuestion(question));
+            return Json(repo.GetQuestions());
         }
-        public IActionResult GetInfoForQuestion(Question question)
-        {
-            var repo = new QuestionRepository(_connectionString);
-            var tags = repo.GetTagsForQuestion(question);
-            var count = tags.Count();
-            return Json(new HomePageViewModel
-            {
-                Tags = tags,
-                Likes = question.Likes,
-                AnswerCount = tags.Count()
-            });
-        }
+        //public IActionResult GetTagsForQuestion(Question question)
+        //{
+        //    var repo = new QuestionRepository(_connectionString);
+        //    return Json(repo.GetTagsForQuestion(question));
+        //}
 
         [Authorize]
         public IActionResult AskAQuestion()
@@ -64,10 +61,9 @@ namespace StackOverflow.Web.Controllers
             return View(new ViewQuestionViewModel
             {
                 Question = question,
-                UserName = repo.GetUserNameById(question.UserId),
-                Tags = repo.GetTagsForQuestion(question),
-                Likes = question.Likes,
-                Answers = repo.GetAnswersForQuestion(id)
+                AnswerUsers = repo.GetAnswerUsersByQuestionId(id),
+                QuestionTags = repo.GetQuestionTagsByQuestionId(id),
+                QuestionUser = repo.GetQuestionUsersByQuestionId(id)
             });
         }
         [Authorize]
@@ -80,7 +76,67 @@ namespace StackOverflow.Web.Controllers
             qrepo.SubmitAnswer(questionId, text, user);
             return Redirect($"/home/viewquestion?id={questionId}");
         }
+        public IActionResult GetInfoForQuestion(Question question)
+        {
+            var repo = new QuestionRepository(_connectionString);
+            var tags = repo.GetTagsForQuestion(question);
+            var count = tags.Count();
+            var answerCount = repo.GetAnswersForQuestion(question.Id).Count();
+            return Json(new HomePageViewModel
+            {
+                Tags = tags,
+                Likes = question.Likes,
+                AnswerCount = answerCount
+            });
+        }
+        public IActionResult IncreaseLikes(int id)
+        {
+            var urepo = new UserRepository(_connectionString);
+            var currentUserEmail = User.Identity.Name;
+            var user = urepo.GetUserByEmail(currentUserEmail);
+            var repo = new QuestionRepository(_connectionString);
+            repo.IncreaseLikes(id);
+            return Redirect($"/home/viewquestion?id={id}");
+        }
+        [HttpPost]
+        public IActionResult AddToSession(int id)
+        {
+            var urepo = new UserRepository(_connectionString);
+            var qrepo = new QuestionRepository(_connectionString);
+            var currentUserEmail = User.Identity.Name;
+            var user = urepo.GetUserByEmail(currentUserEmail);
+            var userLikes = qrepo.GetUserLikes(user.Id);
+            if (userLikes == null)
+            {
+                qrepo.NewItUp(user.Id);
+            }
+            else if(qrepo.HasThisValue(user.Id,id))
+            {
+                return Redirect($"/home/viewimage?id={id}");
+            }
+            qrepo.AddLike(user.Id, id);
+            //HttpContext.Session.Set("Session", sessionLikes);
+            return Redirect($"/home/increaselikes?id={id}");
+        }
 
 
     }
+    public static class SessionExtensions
+    {
+        public static void Set<T>(this ISession session, string key, T value)
+        {
+            session.SetString(key, JsonSerializer.Serialize(value));
+        }
+
+        public static T Get<T>(this ISession session, string key)
+        {
+            string value = session.GetString(key);
+
+            return value == null ? default(T) :
+                JsonSerializer.Deserialize<T>(value);
+        }
+    }
+
 }
+
+

@@ -1,4 +1,6 @@
-﻿namespace QASite.Data
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace QASite.Data
 {
     public class QuestionRepository
     {
@@ -54,13 +56,26 @@
 
             }
             context.SaveChanges();
+            context.QuestionUsers.Add(new QuestionUser
+            {
+                QuestionId = question.Id,
+                UserId = user.Id
+            });
+            context.SaveChanges();
 
         }
-
         public List<Question> GetQuestions()
         {
             var context = new StackOverflowContext(_connectionString);
             return context.Questions.OrderByDescending(q => q.DatePosted).ToList();
+        }
+        public List<QuestionTag> GetQuestionTags()
+        {
+            var context = new StackOverflowContext(_connectionString);
+            return context.QuestionTags.OrderByDescending(qt => qt.Question.DatePosted)
+                .Include(q => q.Question)
+                .Include(q => q.Tag)
+                .ToList();
         }
         public List<Tag> GetTagsForQuestion(Question question)
         {
@@ -130,28 +145,75 @@
             var context = new StackOverflowContext(_connectionString);
             return context.Users.FirstOrDefault(u => u.Id == answerUserId).Name;
         }
-        public List<AnswerUser> GetAnswersWithUserName(int questionId)
+        public List<AnswerUser> GetAnswerUsersByQuestionId(int questionId)
         {
             var repo = new QuestionRepository(_connectionString);
             var context = new StackOverflowContext(_connectionString);
-            var answerUsers = new List<AnswerUser>();
-            var answers = repo.GetAnswersForQuestion(questionId);
-            foreach (var answer in answers)
-            {
-                var answerUser = context.AnswerUsers.FirstOrDefault(au => au.AnswerId == answer.Id);
-                if (answerUser != null)
-                {
-                    answerUsers.Add(answerUser);
-                }
-            }
-            return answerUsers;
-
+            return (List<AnswerUser>)context.AnswerUsers.Where(au => au.Answer.QuestionId == questionId)
+                .Include(au => au.User)
+                .Include(au => au.Answer)
+                //.ThenInclude(a => a.QuestionId)
+                .ToList();
         }
-        public List<QuestionTag> GetQuestionTagsForQuestionId(int questionId)
+
+        public List<QuestionTag> GetQuestionTagsByQuestionId(int questionId)
         {
             var context = new StackOverflowContext(_connectionString);
-            return context.QuestionTags.Where(qt => qt.QuestionId == questionId)
-                .Include(qt => qt.)
+            return context.QuestionTags.Where(qt => qt.Question.Id == questionId)
+                .Include(qt => qt.Question)
+                .Include(qt => qt.Tag)
+                .ToList();
+        }
+        //public List<QuestionUser> GetQuestionUsersByQuestionId(int questionId)
+        //{
+        //    var context = new StackOverflowContext(_connectionString);
+        //    return context.QuestionUsers.Where(qu => qu.Question.Id == questionId)
+        //        .Include(qu => qu.Question)
+        //        .Include(qu => qu.User)
+        //        .ToList();
+        //}
+        public QuestionUser GetQuestionUsersByQuestionId(int questionId)
+        {
+            var context = new StackOverflowContext(_connectionString);
+            return context.QuestionUsers.Include(qu => qu.Question).Include(qu => qu.User).FirstOrDefault(qu => qu.Question.Id == questionId);
+
+        }
+        public void IncreaseLikes(int id)
+        {
+            var repo = new QuestionRepository(_connectionString);
+            var context = new StackOverflowContext(_connectionString);
+            //var question = repo.GetQuestionById(id);
+            //question.Likes++;
+            context.Questions.FirstOrDefault(q => q.Id == id).Likes++;
+            context.SaveChanges();
+
+        }
+        public List<Like> GetUserLikes(int userId)
+        {
+            var context = new StackOverflowContext(_connectionString);
+            return context.Users.FirstOrDefault(u => u.Id == userId).Likes.ToList();
+        }
+        public void AddLike(int userId, int id)
+        {
+            var context = new StackOverflowContext(_connectionString);
+            context.Users.FirstOrDefault(u => u.Id == userId).Likes.Add(new Like
+            {
+                Value = id,
+                UserId = userId
+            });
+            context.SaveChanges();
+        }
+        public void NewItUp(int userId)
+        {
+            var context = new StackOverflowContext(_connectionString);
+            context.Users.FirstOrDefault(u => u.Id == userId).Likes = new List<Like>();
+            context.SaveChanges();
+        }
+        public bool HasThisValue(int userId, int id)
+        {
+            var context = new StackOverflowContext(_connectionString);
+            var users = context.Users.FirstOrDefault(u => u.Id == userId);
+            return users.Likes.Any(l => l.Value == id);
         }
     }
 }

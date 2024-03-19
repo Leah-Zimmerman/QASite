@@ -1,5 +1,5 @@
 ﻿@model ViewQuestionViewModel
-@using StackOverflow.Data
+@using QASite.Data
 
 <div class="row" style="margin-top:100px;">
     <div class="col-md-8 offset-md-2 bg-light p-4 shadow rounded">
@@ -7,18 +7,23 @@
         <hr />
         <p>@Model.Question.Text</p>
         <hr />
-        <span>Asked by @Model.UserName </span>
+        <span>Asked by @Model.QuestionUser.User.Name </span>
         <span>on </span>
-        <span>@Model.Question.DatePosted</span>
+        <span>@Model.Question.DatePosted.ToShortDateString()</span>
         <br />
         <span>Tags: </span>
-        @foreach (var tag in Model.Tags)
+        @foreach (var questionTag in Model.QuestionTags)
         {
-            <span class="badge bg-primary">@tag.Description </span>
+            <span class="badge bg-primary">@questionTag.Tag.Description </span>
         }
         <br />
         <span>Likes: </span>
-        <span>@Model.Likes</span>
+        <span>@Model.Question.Likes</span>
+        <br />
+        @if (User.Identity.IsAuthenticated)
+        {
+            <i style="font-size:40px;cursor:pointer;" class="bi bi-heart-fill" id="like-question" data-question-id="@Model.Question.Id"></i>
+        }
     </div>
     <div class="col-md-8 offset-md-2">
         <h3>Answers:</h3>
@@ -31,14 +36,14 @@
     }
     else
     {
-        @foreach (var answer in Model.Answers)
+        @foreach (var answerUser in Model.AnswerUsers)
         {
             <div class="col-md-8 offset-md-2 card card-body bg-light">
 
-                <span>@answer.Text </span>
+                <span>@answerUser.Answer.Text </span>
 
                 <br />
-                <span>Answered by @answer.AnswerUsers.Where(au=>au.AnswerId==answer.Id).User.Name on @answer.DatePosted </span>
+                <span>Answered by @answerUser.User.Name on @answerUser.Answer.DatePosted.ToShortDateString() </span>
                 <hr />
             </div>
         }
@@ -59,3 +64,7 @@
     }
 
 </div>
+
+@section scripts{
+    <script src="~/js/viewquestion.js"></script>
+}

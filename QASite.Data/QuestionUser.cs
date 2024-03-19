@@ -6,5 +6,7 @@
         public int UserId { get; set; }
         public Question Question { get; set; }
         public User User { get; set; }
+
+        public List<Question> LikedQuestions { get; set; }
     }
 }

@@ -11,5 +11,8 @@ namespace QASite.Web.Models
         public List<Answer> Answers { get; set; }
         public string AnswerUserName { get; set; }
         public List<AnswerUser> AnswerUsers { get; set; }
+        public List<QuestionTag> QuestionTags { get; set; }
+        public List<QuestionUser> QuestionUsers { get; set; }
+        public QuestionUser QuestionUser { get; set; }
     }
 }
